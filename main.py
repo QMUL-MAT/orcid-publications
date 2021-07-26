@@ -5,7 +5,7 @@ a bibtex file with their publications. Output is written to
 a `public` directory at the current working directory.
 """
 import pathlib
-from typing import Generator, List
+from typing import Generator, List, Tuple
 
 import frontmatter
 import requests
@@ -39,11 +39,13 @@ def citations_gen(orcid_id: str) -> List[str]:
             yield citation["citation-value"].strip()
 
 
-def students_orcid_ids_gen() -> Generator[str]:
-    """
-    Yield ORCID IDs from students' profile from the
-    gatsby-mat repo.
-    """
+def extract_slug(url: str) -> str:
+    _, filename = url.rsplit('/', maxsplit=1)
+    return filename.split('.', maxsplit=1)[0]
+
+
+def students_gen() -> Generator[dict, None, None]:
+    """Yield students' metadata (frontmatter) from the gatsby-mat repo."""
     students = get_json(STUDENTS_URL)
     file_urls = [x["download_url"] for x in students]
     markdown_urls = [x for x in file_urls if x.endswith('.md')]
@@ -51,13 +53,14 @@ def students_orcid_ids_gen() -> Generator[str]:
         resp = requests.get(markdown_url)
         assert resp.status_code == 200, resp.status_code
         metadata, _ = frontmatter.parse(resp.content)
-        if 'orcid_id' in metadata:
-            yield metadata['orcid_id']
+        metadata['slug'] = extract_slug(markdown_url)
+        yield metadata
 
 
 if __name__ == "__main__":
     OUTPUT_DIR.mkdir(exist_ok=True)
-    for orcid_id in students_orcid_ids_gen():
-        with open(OUTPUT_DIR / (orcid_id + '.md'), 'w') as f:
-            for citation in citations_gen(orcid_id):
-                print(citation, file=f)
+    for student in students_gen():
+        if 'orcid_id' in student:
+            with open(OUTPUT_DIR / (student['slug'] + '.bib'), 'w') as f:
+                for citation in citations_gen(student['orcid_id']):
+                    print(citation, file=f)
