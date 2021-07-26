@@ -13,7 +13,7 @@ import requests
 STUDENTS_URL = "https://api.github.com/repos/QMUL-MAT/gatsby-mat/contents/src/content/students"
 ORCID_BASE_URL = "http://orcid.org"
 ORCID_HEADERS = {"Accept": "application/orcid+json"}
-OUTPUT_DIR = pathlib.Path('public')
+OUTPUT_DIR = pathlib.Path("public")
 
 
 def get_json(url: str, **kwargs) -> dict:
@@ -40,27 +40,27 @@ def citations_gen(orcid_id: str) -> List[str]:
 
 
 def extract_slug(url: str) -> str:
-    _, filename = url.rsplit('/', maxsplit=1)
-    return filename.split('.', maxsplit=1)[0]
+    _, filename = url.rsplit("/", maxsplit=1)
+    return filename.split(".", maxsplit=1)[0]
 
 
 def students_gen() -> Generator[dict, None, None]:
     """Yield students' metadata (frontmatter) from the gatsby-mat repo."""
     students = get_json(STUDENTS_URL)
     file_urls = [x["download_url"] for x in students]
-    markdown_urls = [x for x in file_urls if x.endswith('.md')]
+    markdown_urls = [x for x in file_urls if x.endswith(".md")]
     for markdown_url in markdown_urls:
         resp = requests.get(markdown_url)
         assert resp.status_code == 200, resp.status_code
         metadata, _ = frontmatter.parse(resp.content)
-        metadata['slug'] = extract_slug(markdown_url)
+        metadata["slug"] = extract_slug(markdown_url)
         yield metadata
 
 
 if __name__ == "__main__":
     OUTPUT_DIR.mkdir(exist_ok=True)
     for student in students_gen():
-        if 'orcid_id' in student:
-            with open(OUTPUT_DIR / (student['slug'] + '.bib'), 'w') as f:
-                for citation in citations_gen(student['orcid_id']):
+        if "orcid_id" in student:
+            with open(OUTPUT_DIR / (student["slug"] + ".bib"), "w") as f:
+                for citation in citations_gen(student["orcid_id"]):
                     print(citation, file=f)
