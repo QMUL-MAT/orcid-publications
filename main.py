@@ -57,6 +57,21 @@ def students_gen() -> Generator[dict, None, None]:
         yield metadata
 
 
+def index_content(output_dir):
+    """Generate an index.html file."""
+    parts = [
+        "<h1>MAT students' publications</h1>",
+        "<ul>"
+    ]
+    for filename in output_dir.iterdir():
+        if filename.name != 'index.html':
+            parts.append(
+                f"<li><a href={filename.name}>{filename.name}</a></li>"
+            )
+    parts.append("</ul>")
+    return '\n'.join(parts)
+
+
 if __name__ == "__main__":
     OUTPUT_DIR.mkdir(exist_ok=True)
     for student in students_gen():
@@ -64,3 +79,5 @@ if __name__ == "__main__":
             with open(OUTPUT_DIR / (student["slug"] + ".bib"), "w") as f:
                 for citation in citations_gen(student["orcid_id"]):
                     print(citation, file=f)
+    with open(OUTPUT_DIR / 'index.html', 'w') as f:
+        f.write(index_content(OUTPUT_DIR))
