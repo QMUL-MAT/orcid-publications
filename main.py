@@ -11,7 +11,7 @@ import frontmatter
 import requests
 
 STUDENTS_URL = "https://api.github.com/repos/QMUL-MAT/gatsby-mat/contents/src/content/students"
-ORCID_BASE_URL = "http://orcid.org"
+ORCID_BASE_URL = "http://pub.orcid.org"
 ORCID_HEADERS = {"Accept": "application/orcid+json"}
 OUTPUT_DIR = pathlib.Path("public")
 
