@@ -35,7 +35,7 @@ def citations_gen(orcid_id: str) -> List[str]:
         work_path = work["work-summary"][0]["path"]
         work_details = orcid(work_path)
         citation = work_details["citation"]
-        if citation["citation-type"] == "bibtex":
+        if citation and citation["citation-type"] == "bibtex":
             yield citation["citation-value"].strip()
 
 
